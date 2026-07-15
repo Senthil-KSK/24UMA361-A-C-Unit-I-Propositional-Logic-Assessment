@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propositional Logic — Assessment</title>
+    <style>
+        :root {
+            --bg-color: #f5f2eb;
+            --card-bg: #ffffff;
+            --text-main: #0c231c;
+            --text-muted: #727a75;
+            --accent-green: #235d4e;
+            --border-color: #dcd7ca;
+            --option-border: #d3cfc4;
+            --progress-bg: #dcd7ca;
+            
+            /* Results Styling Colors */
+            --correct-color: #235d4e;
+            --wrong-color: #b33a3a;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* Header Styles */
+        .quiz-header {
+            border-bottom: 2px solid var(--text-main);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .meta-info {
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .quiz-title {
+            font-size: 32px;
+            margin: 10px 0 0 0;
+            font-weight: normal;
+        }
+
+        /* Status & Progress Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-family: monospace;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--progress-bg);
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 5%;
+            background-color: var(--accent-green);
+            transition: width 0.3s ease;
+        }
+
+        /* Question Card */
+        .question-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            margin-bottom: 30px;
+        }
+
+        .question-number {
+            font-family: monospace;
+            text-transform: uppercase;
+            font-size: 13px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 22px;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        /* Options */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--option-border);
+            border-radius: 6px;
+            padding: 18px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-family: 'Georgia', serif;
+            font-size: 18px;
+        }
+
+        .option:hover {
+            background-color: #faf9f6;
+            border-color: var(--text-muted);
+        }
+
+        .option.selected {
+            border-color: var(--accent-green);
+            background-color: #edf4f2;
+        }
+
+        .option-letter {
+            font-family: monospace;
+            font-weight: bold;
+            color: var(--accent-green);
+            margin-right: 25px;
+            width: 20px;
+        }
+
+        /* Dot Indicators */
+        .indicators {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #d5d0c3;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background-color: transparent;
+            border: 2px solid var(--text-main);
+            width: 10px;
+            height: 10px;
+        }
+
+        .dot.answered {
+            background-color: var(--accent-green);
+        }
+
+        /* Navigation Controls */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            font-family: monospace;
+            font-size: 15px;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+        }
+
+        .btn-secondary {
+            border: 1px solid var(--text-muted);
+            color: var(--text-muted);
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #19463a;
+        }
+
+        /* RESULTS SHEET STYLE */
+        .results-sheet {
+            display: none;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            margin-bottom: 30px;
+        }
+
+        .results-header-summary {
+            text-align: center;
+            padding-bottom: 30px;
+            border-bottom: 2px dashed var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .results-score-title {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .results-score-num {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+
+        .results-item {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .results-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-q-title {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .result-your-ans {
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .result-your-ans.correct {
+            color: var(--text-main);
+        }
+
+        .result-your-ans.wrong {
+            color: var(--wrong-color);
+        }
+
+        .result-correct-ans {
+            font-size: 16px;
+            color: var(--text-main);
+        }
+
+        .results-footer-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed var(--border-color);
+        }
+
+        /* Footer */
+        .quiz-footer {
+            text-align: center;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- Header -->
+    <div class="quiz-header">
+        <div class="meta-info">
+            <span>24UMA361 · UNIT I</span>
+            <span>¬ ∧ ∨ →</span>
+        </div>
+        <h1 class="quiz-title">Propositional Logic — Assessment</h1>
+    </div>
+
+    <!-- Active Quiz Elements (Hidden on Submit) -->
+    <div id="quiz-active-area">
+        <div class="status-bar">
+            <span id="question-counter">Question 1 of 20</span>
+            <span id="answered-counter">0 answered</span>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <!-- Main Question Box -->
+        <div class="question-card" id="main-card">
+            <div class="question-number" id="card-q-number">QUESTION 1</div>
+            <div class="question-text" id="question-text">Loading question...</div>
+            
+            <div class="options-list" id="options-container">
+                <!-- Options dynamically generated here -->
+            </div>
+        </div>
+
+        <!-- Bottom Dots Navigation -->
+        <div class="indicators" id="dots-container"></div>
+
+        <!-- Action Buttons -->
+        <div class="controls">
+            <button class="btn btn-secondary" id="prev-btn" onclick="prevQuestion()" disabled>← Previous</button>
+            <button class="btn btn-secondary" id="reshuffle-btn" onclick="reshuffleQuiz()">↻ Reshuffle</button>
+            <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()">Next →</button>
+        </div>
+    </div>
+
+    <!-- Results Display Area (Shown on Submit) -->
+    <div class="results-sheet" id="results-area">
+        <div class="results-header-summary">
+            <div class="results-score-title">Assessment Completed!</div>
+            <div class="results-score-num" id="final-score-box">0 / 20</div>
+        </div>
+        
+        <!-- List of answers matching the target style template -->
+        <div id="results-list"></div>
+
+        <!-- Retake Option Wrapper -->
+        <div class="results-footer-actions">
+            <button class="btn btn-primary" onclick="retakeQuiz()">↻ Retake Assessment</button>
+        </div>
+    </div>
+
+    <!-- Footer Meta -->
+    <div class="quiz-footer">
+        DEPARTMENT OF MATHEMATICS · ALGEBRA AND COMBINATORICS · R2026
+    </div>
+</div>
+
+<script>
+    // 20 MCQ questions populated directly from provided assessment data
+    const quizData = [
+        {
+            question: "Which sentence is NOT a proposition?",
+            options: ["This statement is false.", "2 + 3 = 5.", "Chennai is the capital of Tamil Nadu.", "Delhi is in America."],
+            correct: 0
+        },
+        {
+            question: "In the conditional statement p → q, p is called the:",
+            options: ["Conclusion", "Consequence", "Biconditional", "Hypothesis (antecedent)"],
+            correct: 3
+        },
+        {
+            question: "In the fire alarm example, \"smoke detected OR emergency button pressed\" illustrates:",
+            options: ["Conjunction", "Disjunction", "Negation", "Conditional"],
+            correct: 1
+        },
+        {
+            question: "According to the precedence of logical operators, which operator has the highest precedence (evaluated first)?",
+            options: ["→ (Conditional)", "↔ (Biconditional)", "∧ (Conjunction)", "¬ (Negation)"],
+            correct: 3
+        },
+        {
+            question: "The negation ¬p of a proposition p is true when:",
+            options: ["p and q are both true", "p is true", "p is false", "p is undefined"],
+            correct: 2
+        },
+        {
+            question: "A table that gives the truth values of a compound statement in terms of its component parts is called a:",
+            options: ["Venn diagram", "Truth table", "Logic gate", "Predicate matrix"],
+            correct: 1
+        },
+        {
+            question: "Which of the following is a valid proposition?",
+            options: ["Obey the orders.", "x + 4 = 2", "Delhi is the capital of India.", "Do you speak English?"],
+            correct: 2
+        },
+        {
+            question: "In the ATM machine example, which connective models \"card is valid AND PIN is correct\"?",
+            options: ["Biconditional", "Disjunction", "Conjunction", "Negation"],
+            correct: 2
+        },
+        {
+            question: "Declarative sentences that cannot be split further into simpler sentences are called:",
+            options: ["Conditional statements", "Compound statements", "Biconditional statements", "Primary (atomic) statements"],
+            correct: 3
+        },
+        {
+            question: "The phrase \"p is necessary and sufficient for q\" corresponds to which connective?",
+            options: ["p ∧ q", "p ∨ q", "p ↔ q", "p → q"],
+            correct: 2
+        },
+        {
+            question: "The disjunction p ∨ q is false only when:",
+            options: ["p is false and q is true", "Both p and q are false", "Both p and q are true", "p is true and q is false"],
+            correct: 1
+        },
+        {
+            question: "For the compound proposition (p ∨ ¬q) → (p ∧ q) when p = T and q = F, the result is:",
+            options: ["Undefined", "True", "Cannot be determined", "False"],
+            correct: 3
+        },
+        {
+            question: "\"If the safety door is NOT closed, the machine does not start\" primarily illustrates:",
+            options: ["Biconditional", "Conjunction", "Disjunction", "Negation"],
+            correct: 3
+        },
+        {
+            question: "An operation used to connect two or more statements is called a:",
+            options: ["Connective", "Inference rule", "Quantifier", "Predicate"],
+            correct: 0
+        },
+        {
+            question: "The conditional statement p → q is false only when:",
+            options: ["p is true and q is true", "p is false and q is false", "p is true and q is false", "p is false and q is true"],
+            correct: 2
+        },
+        {
+            question: "In the password verification example, access is granted if and only if the password matches - this is an example of:",
+            options: ["Conjunction", "Biconditional", "Conditional", "Disjunction"],
+            correct: 1
+        },
+        {
+            question: "What is a proposition in propositional logic?",
+            options: ["A sentence that is always both true and false", "Any sentence that asks a question", "A command instructing someone to do something", "A declarative sentence that is either true or false, but not both"],
+            correct: 3
+        },
+        {
+            question: "Statements formed by joining one or more primary statements with connectives are called:",
+            options: ["Truth tables", "Primitive statements", "Compound (molecular) statements", "Atomic statements"],
+            correct: 2
+        },
+        {
+            question: "The conjunction p ∧ q is true when:",
+            options: ["p is true and q is false", "At least one of p, q is true", "Both p and q are false", "Both p and q are true"],
+            correct: 3
+        },
+        {
+            question: "The biconditional p ↔ q is true when:",
+            options: ["p is true regardless of q", "p and q have the same truth value", "q is true regardless of p", "p and q have different truth values"],
+            correct: 1
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let userAnswers = new Array(quizData.length).fill(null);
+
+    // Initial load configurations
+    window.onload = function() {
+        createDots();
+        loadQuestion();
+    };
+
+    function loadQuestion() {
+        const currentQuiz = quizData[currentQuestionIndex];
+        
+        // Update headers and text indicators
+        document.getElementById('question-counter').innerText = `Question ${currentQuestionIndex + 1} of ${quizData.length}`;
+        document.getElementById('card-q-number').innerText = `QUESTION ${currentQuestionIndex + 1}`;
+        document.getElementById('question-text').innerText = currentQuiz.question;
+        
+        // Adjust the linear progress bar percentage
+        const progressPercent = ((currentQuestionIndex + 1) / quizData.length) * 100;
+        document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+        // Render options list dynamically
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        const letters = ['A', 'B', 'C', 'D'];
+        currentQuiz.options.forEach((optionText, index) => {
+            const button = document.createElement('button');
+            button.className = `option ${userAnswers[currentQuestionIndex] === index ? 'selected' : ''}`;
+            button.onclick = () => selectOption(index);
+            
+            button.innerHTML = `
+                <span class="option-letter">${letters[index]}</span>
+                <span class="option-text">${optionText}</span>
+            `;
+            optionsContainer.appendChild(button);
+        });
+
+        // Toggle disabled states for pagination buttons
+        document.getElementById('prev-btn').disabled = currentQuestionIndex === 0;
+        
+        const nextBtn = document.getElementById('next-btn');
+        if (currentQuestionIndex === quizData.length - 1) {
+            nextBtn.innerText = "Submit Assessment";
+        } else {
+            nextBtn.innerText = "Next →";
+        }
+
+        updateStatusCounters();
+    }
+
+    function selectOption(optionIndex) {
+        userAnswers[currentQuestionIndex] = optionIndex;
+        
+        const options = document.querySelectorAll('.option');
+        options.forEach((opt, idx) => {
+            if(idx === optionIndex) opt.classList.add('selected');
+            else opt.classList.remove('selected');
+        });
+
+        updateStatusCounters();
+    }
+
+    function updateStatusCounters() {
+        const answeredCount = userAnswers.filter(ans => ans !== null).length;
+        document.getElementById('answered-counter').innerText = `${answeredCount} answered`;
+        
+        // Re-eval dot navigation appearance properties
+        const dots = document.querySelectorAll('.dot');
+        dots.forEach((dot, idx) => {
+            dot.className = 'dot'; 
+            if (idx === currentQuestionIndex) {
+                dot.classList.add('active');
+            } else if (userAnswers[idx] !== null) {
+                dot.classList.add('answered');
+            }
+        });
+    }
+
+    function createDots() {
+        const dotsContainer = document.getElementById('dots-container');
+        dotsContainer.innerHTML = '';
+        quizData.forEach((_, idx) => {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.onclick = () => {
+                currentQuestionIndex = idx;
+                loadQuestion();
+            };
+            dotsContainer.appendChild(dot);
+        });
+    }
+
+    function nextQuestion() {
+        if (currentQuestionIndex < quizData.length - 1) {
+            currentQuestionIndex++;
+            loadQuestion();
+        } else {
+            submitQuizAndShowSummary();
+        }
+    }
+
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+    }
+
+    function reshuffleQuiz() {
+        for (let i = quizData.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [quizData[i], quizData[j]] = [quizData[j], quizData[i]];
+            [userAnswers[i], userAnswers[j]] = [userAnswers[j], userAnswers[i]];
+        }
+        currentQuestionIndex = 0;
+        loadQuestion();
+    }
+
+    // --- RENDER COMPLETE RESULTS SHEET ON SUBMISSION ---
+    function submitQuizAndShowSummary() {
+        let correctCount = 0;
+        userAnswers.forEach((answer, index) => {
+            if (answer === quizData[index].correct) {
+                correctCount++;
+            }
+        });
+
+        document.getElementById('quiz-active-area').style.display = 'none';
+        document.getElementById('final-score-box').innerText = `${correctCount} / ${quizData.length}`;
+
+        const resultsListContainer = document.getElementById('results-list');
+        resultsListContainer.innerHTML = '';
+
+        quizData.forEach((item, idx) => {
+            const userChoiceIndex = userAnswers[idx];
+            const correctChoiceIndex = item.correct;
+            const isCorrect = userChoiceIndex === correctChoiceIndex;
+            
+            const userText = userChoiceIndex !== null ? item.options[userChoiceIndex] : "[No answer selected]";
+            const correctText = item.options[correctChoiceIndex];
+
+            const resultItemDiv = document.createElement('div');
+            resultItemDiv.className = 'results-item';
+
+            if (isCorrect) {
+                resultItemDiv.innerHTML = `
+                    <div class="result-q-title">${idx + 1}. ${item.question}</div>
+                    <div class="result-your-ans correct">Your answer: ${userText} ✓</div>
+                `;
+            } else {
+                resultItemDiv.innerHTML = `
+                    <div class="result-q-title">${idx + 1}. ${item.question}</div>
+                    <div class="result-your-ans wrong">Your answer: ${userText} X</div>
+                    <div class="result-correct-ans">Correct answer: ${correctText}</div>
+                `;
+            }
+            resultsListContainer.appendChild(resultItemDiv);
+        });
+
+        document.getElementById('results-area').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- RESET THE QUIZ STATE AND RETAKE ASSESSMENT ---
+    function retakeQuiz() {
+        // Clear past configurations
+        userAnswers = new Array(quizData.length).fill(null);
+        currentQuestionIndex = 0;
+
+        // Shuffle questions automatically for a fresh test challenge 
+        reshuffleQuiz();
+
+        // Switch container view structures back 
+        document.getElementById('results-area').style.display = 'none';
+        document.getElementById('quiz-active-area').style.display = 'block';
+
+        // Initialize state view properties
+        createDots();
+        loadQuestion();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
